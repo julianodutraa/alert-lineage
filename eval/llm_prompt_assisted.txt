@@ -1,0 +1,457 @@
+Dependency graph (u -> v means v depends on u, so a fault in u can make v alert):
+  object-store -> spark-batch
+  object-store -> warehouse-loader
+  object-store -> feature-store
+  kafka-broker -> stream-enricher
+  kafka-broker -> ingest-gateway
+  stream-enricher -> feature-store
+  stream-enricher -> warehouse-loader
+  postgres-primary -> dag-scheduler
+  postgres-primary -> api-serving
+  postgres-primary -> feature-store
+  dag-scheduler -> spark-batch
+  dag-scheduler -> warehouse-loader
+  spark-batch -> warehouse-loader
+  warehouse-loader -> dashboard-svc
+  feature-store -> api-serving
+  api-serving -> dashboard-svc
+  metrics-exporter has no dependencies and no dependents.
+
+For each storm below, name the root service. Background alerts unrelated to the storm can appear in any window, including before the real root fires.
+
+STORM S00: alerts in window (minutes relative to window start)
+  a00  t+  4.1  metrics-exporter  ExporterScrapeFlapping
+  a01  t+  6.3  metrics-exporter  ExporterScrapeFlapping
+  a02  t+  6.9  metrics-exporter  ExporterScrapeFlapping
+  a03  t+ 10.7  metrics-exporter  ExporterScrapeFlapping
+  a04  t+ 11.5  api-serving       ServingP99LatencyHigh
+  a05  t+ 12.4  dashboard-svc     DashboardQueryTimeouts
+  a06  t+ 14.6  dashboard-svc     DashboardQueryTimeouts
+  a07  t+ 15.1  dashboard-svc     DashboardQueryTimeouts
+  a08  t+ 16.4  metrics-exporter  ExporterScrapeFlapping
+  a09  t+ 22.5  metrics-exporter  ExporterScrapeFlapping
+  a10  t+ 23.3  metrics-exporter  ExporterScrapeFlapping
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): metrics-exporter (7.1), api-serving (3.9), dashboard-svc (0.0)
+
+STORM S01: alerts in window (minutes relative to window start)
+  a00  t+ 14.8  kafka-broker      KafkaUnderReplicatedPartitions
+  a01  t+ 16.2  stream-enricher   ConsumerLagGrowing
+  a02  t+ 18.6  ingest-gateway    IngestGateway5xxBudgetBurn
+  a03  t+ 19.2  feature-store     FeatureFreshnessSLOBreach
+  a04  t+ 19.2  stream-enricher   ConsumerLagGrowing
+  a05  t+ 20.3  warehouse-loader  LoadJobFailed
+  a06  t+ 23.5  stream-enricher   ConsumerLagGrowing
+  a07  t+ 25.0  ingest-gateway    IngestGateway5xxBudgetBurn
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): kafka-broker (7.3), ingest-gateway (0.5), stream-enricher (0.2)
+
+STORM S02: alerts in window (minutes relative to window start)
+  a00  t+  4.9  object-store      ObjectStoreHighErrorRate
+  a01  t+ 13.3  warehouse-loader  LoadJobFailed
+  a02  t+ 14.6  dashboard-svc     DashboardQueryTimeouts
+  a03  t+ 15.2  warehouse-loader  LoadJobFailed
+  a04  t+ 17.3  dashboard-svc     DashboardQueryTimeouts
+  a05  t+ 22.2  dashboard-svc     DashboardQueryTimeouts
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): object-store (5.7), warehouse-loader (0.2), feature-store (0.1)
+
+STORM S03: alerts in window (minutes relative to window start)
+  a00  t+  6.7  stream-enricher   ConsumerLagGrowing
+  a01  t+  6.8  warehouse-loader  LoadJobFailed
+  a02  t+  6.8  feature-store     FeatureFreshnessSLOBreach
+  a03  t+  6.9  feature-store     FeatureFreshnessSLOBreach
+  a04  t+  7.0  feature-store     FeatureFreshnessSLOBreach
+  a05  t+  7.1  feature-store     FeatureFreshnessSLOBreach
+  a06  t+  7.7  feature-store     FeatureFreshnessSLOBreach
+  a07  t+  7.8  feature-store     FeatureFreshnessSLOBreach
+  a08  t+  8.0  feature-store     FeatureFreshnessSLOBreach
+  a09  t+  9.5  feature-store     FeatureFreshnessSLOBreach
+  a10  t+  9.9  dashboard-svc     DashboardQueryTimeouts
+  a11  t+ 11.2  feature-store     FeatureFreshnessSLOBreach
+  a12  t+ 15.0  warehouse-loader  LoadJobFailed
+  a13  t+ 15.2  object-store      ObjectStoreHighErrorRate
+  a14  t+ 19.8  metrics-exporter  ExporterScrapeFlapping
+  a15  t+ 19.8  kafka-broker      KafkaUnderReplicatedPartitions
+  a16  t+ 21.0  ingest-gateway    IngestGateway5xxBudgetBurn
+  a17  t+ 25.9  ingest-gateway    IngestGateway5xxBudgetBurn
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): stream-enricher (13.5), kafka-broker (2.3), metrics-exporter (1.3)
+
+STORM S04: alerts in window (minutes relative to window start)
+  a00  t+  0.2  dashboard-svc     DashboardQueryTimeouts
+  a01  t+  7.4  kafka-broker      KafkaUnderReplicatedPartitions
+  a02  t+  7.6  object-store      ObjectStoreHighErrorRate
+  a03  t+  7.7  feature-store     FeatureFreshnessSLOBreach
+  a04  t+  7.8  warehouse-loader  LoadJobFailed
+  a05  t+  7.9  spark-batch       SparkStageRetriesHigh
+  a06  t+  8.0  warehouse-loader  LoadJobFailed
+  a07  t+  8.0  dashboard-svc     DashboardQueryTimeouts
+  a08  t+  8.3  dashboard-svc     DashboardQueryTimeouts
+  a09  t+  8.4  warehouse-loader  LoadJobFailed
+  a10  t+  8.4  feature-store     FeatureFreshnessSLOBreach
+  a11  t+  8.6  dashboard-svc     DashboardQueryTimeouts
+  a12  t+  8.8  warehouse-loader  LoadJobFailed
+  a13  t+  9.3  spark-batch       SparkStageRetriesHigh
+  a14  t+  9.9  warehouse-loader  LoadJobFailed
+  a15  t+ 10.0  dashboard-svc     DashboardQueryTimeouts
+  a16  t+ 10.3  warehouse-loader  LoadJobFailed
+  a17  t+ 10.3  object-store      ObjectStoreHighErrorRate
+  a18  t+ 10.5  stream-enricher   ConsumerLagGrowing
+  a19  t+ 10.5  object-store      ObjectStoreHighErrorRate
+  a20  t+ 10.9  dashboard-svc     DashboardQueryTimeouts
+  a21  t+ 11.0  feature-store     FeatureFreshnessSLOBreach
+  a22  t+ 11.3  feature-store     FeatureFreshnessSLOBreach
+  a23  t+ 11.4  dashboard-svc     DashboardQueryTimeouts
+  a24  t+ 11.8  feature-store     FeatureFreshnessSLOBreach
+  a25  t+ 11.9  dashboard-svc     DashboardQueryTimeouts
+  a26  t+ 12.2  warehouse-loader  LoadJobFailed
+  a27  t+ 12.2  warehouse-loader  LoadJobFailed
+  a28  t+ 13.0  dashboard-svc     DashboardQueryTimeouts
+  a29  t+ 13.2  api-serving       ServingP99LatencyHigh
+  a30  t+ 14.9  feature-store     FeatureFreshnessSLOBreach
+  a31  t+ 16.2  object-store      ObjectStoreHighErrorRate
+  a32  t+ 16.6  warehouse-loader  LoadJobFailed
+  a33  t+ 17.1  spark-batch       SparkStageRetriesHigh
+  a34  t+ 17.1  dashboard-svc     DashboardQueryTimeouts
+  a35  t+ 18.0  spark-batch       SparkStageRetriesHigh
+  a36  t+ 18.2  dashboard-svc     DashboardQueryTimeouts
+  a37  t+ 19.5  spark-batch       SparkStageRetriesHigh
+  a38  t+ 23.3  dashboard-svc     DashboardQueryTimeouts
+  a39  t+ 23.4  warehouse-loader  LoadJobFailed
+  a40  t+ 29.7  dashboard-svc     DashboardQueryTimeouts
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): object-store (33.7), feature-store (4.0), kafka-broker (2.6)
+
+STORM S05: alerts in window (minutes relative to window start)
+  a00  t+  8.7  metrics-exporter  ExporterScrapeFlapping
+  a01  t+ 14.5  dag-scheduler     SchedulerHeartbeatMissed
+  a02  t+ 14.6  warehouse-loader  LoadJobFailed
+  a03  t+ 14.9  dashboard-svc     DashboardQueryTimeouts
+  a04  t+ 15.9  spark-batch       SparkStageRetriesHigh
+  a05  t+ 17.7  spark-batch       SparkStageRetriesHigh
+  a06  t+ 17.7  warehouse-loader  LoadJobFailed
+  a07  t+ 17.8  warehouse-loader  LoadJobFailed
+  a08  t+ 18.8  warehouse-loader  LoadJobFailed
+  a09  t+ 19.7  spark-batch       SparkStageRetriesHigh
+  a10  t+ 19.8  dashboard-svc     DashboardQueryTimeouts
+  a11  t+ 20.6  warehouse-loader  LoadJobFailed
+  a12  t+ 21.4  warehouse-loader  LoadJobFailed
+  a13  t+ 22.1  dashboard-svc     DashboardQueryTimeouts
+  a14  t+ 22.2  dashboard-svc     DashboardQueryTimeouts
+  a15  t+ 28.3  object-store      ObjectStoreHighErrorRate
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): dag-scheduler (13.8), metrics-exporter (1.0), object-store (0.7)
+
+STORM S06: alerts in window (minutes relative to window start)
+  a00  t+  4.1  api-serving       ServingP99LatencyHigh
+  a01  t+  5.6  dashboard-svc     DashboardQueryTimeouts
+  a02  t+  7.5  dashboard-svc     DashboardQueryTimeouts
+  a03  t+  8.8  dashboard-svc     DashboardQueryTimeouts
+  a04  t+  9.1  api-serving       ServingP99LatencyHigh
+  a05  t+  9.2  metrics-exporter  ExporterScrapeFlapping
+  a06  t+ 10.0  dashboard-svc     DashboardQueryTimeouts
+  a07  t+ 10.4  dashboard-svc     DashboardQueryTimeouts
+  a08  t+ 12.0  metrics-exporter  ExporterScrapeFlapping
+  a09  t+ 14.2  spark-batch       SparkStageRetriesHigh
+  a10  t+ 17.2  dashboard-svc     DashboardQueryTimeouts
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): api-serving (8.3), metrics-exporter (2.0), spark-batch (0.6)
+
+STORM S07: alerts in window (minutes relative to window start)
+  a00  t+  3.9  metrics-exporter  ExporterScrapeFlapping
+  a01  t+  9.5  metrics-exporter  ExporterScrapeFlapping
+  a02  t+ 13.9  stream-enricher   ConsumerLagGrowing
+  a03  t+ 13.9  feature-store     FeatureFreshnessSLOBreach
+  a04  t+ 14.4  feature-store     FeatureFreshnessSLOBreach
+  a05  t+ 14.5  stream-enricher   ConsumerLagGrowing
+  a06  t+ 15.0  warehouse-loader  LoadJobFailed
+  a07  t+ 15.2  feature-store     FeatureFreshnessSLOBreach
+  a08  t+ 15.2  feature-store     FeatureFreshnessSLOBreach
+  a09  t+ 15.8  feature-store     FeatureFreshnessSLOBreach
+  a10  t+ 17.3  warehouse-loader  LoadJobFailed
+  a11  t+ 17.5  api-serving       ServingP99LatencyHigh
+  a12  t+ 17.8  warehouse-loader  LoadJobFailed
+  a13  t+ 19.3  warehouse-loader  LoadJobFailed
+  a14  t+ 19.5  warehouse-loader  LoadJobFailed
+  a15  t+ 20.9  feature-store     FeatureFreshnessSLOBreach
+  a16  t+ 21.9  api-serving       ServingP99LatencyHigh
+  a17  t+ 22.1  api-serving       ServingP99LatencyHigh
+  a18  t+ 24.4  warehouse-loader  LoadJobFailed
+  a19  t+ 26.1  api-serving       ServingP99LatencyHigh
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): stream-enricher (12.6), metrics-exporter (7.2), feature-store (0.1)
+
+STORM S08: alerts in window (minutes relative to window start)
+  a00  t+ 13.6  postgres-primary  PostgresConnectionSaturation
+  a01  t+ 13.9  api-serving       ServingP99LatencyHigh
+  a02  t+ 14.0  dag-scheduler     SchedulerHeartbeatMissed
+  a03  t+ 14.2  api-serving       ServingP99LatencyHigh
+  a04  t+ 15.0  api-serving       ServingP99LatencyHigh
+  a05  t+ 15.2  dashboard-svc     DashboardQueryTimeouts
+  a06  t+ 15.3  feature-store     FeatureFreshnessSLOBreach
+  a07  t+ 15.3  api-serving       ServingP99LatencyHigh
+  a08  t+ 15.4  api-serving       ServingP99LatencyHigh
+  a09  t+ 15.6  api-serving       ServingP99LatencyHigh
+  a10  t+ 15.9  feature-store     FeatureFreshnessSLOBreach
+  a11  t+ 16.3  dashboard-svc     DashboardQueryTimeouts
+  a12  t+ 16.4  api-serving       ServingP99LatencyHigh
+  a13  t+ 16.5  api-serving       ServingP99LatencyHigh
+  a14  t+ 16.5  dag-scheduler     SchedulerHeartbeatMissed
+  a15  t+ 16.7  warehouse-loader  LoadJobFailed
+  a16  t+ 17.1  api-serving       ServingP99LatencyHigh
+  a17  t+ 17.2  api-serving       ServingP99LatencyHigh
+  a18  t+ 17.2  postgres-primary  PostgresConnectionSaturation
+  a19  t+ 17.3  warehouse-loader  LoadJobFailed
+  a20  t+ 17.4  dashboard-svc     DashboardQueryTimeouts
+  a21  t+ 17.6  dashboard-svc     DashboardQueryTimeouts
+  a22  t+ 18.1  api-serving       ServingP99LatencyHigh
+  a23  t+ 18.2  dashboard-svc     DashboardQueryTimeouts
+  a24  t+ 18.4  api-serving       ServingP99LatencyHigh
+  a25  t+ 18.7  dag-scheduler     SchedulerHeartbeatMissed
+  a26  t+ 18.8  feature-store     FeatureFreshnessSLOBreach
+  a27  t+ 19.0  dag-scheduler     SchedulerHeartbeatMissed
+  a28  t+ 19.1  feature-store     FeatureFreshnessSLOBreach
+  a29  t+ 19.1  dag-scheduler     SchedulerHeartbeatMissed
+  a30  t+ 19.7  dashboard-svc     DashboardQueryTimeouts
+  a31  t+ 19.8  dashboard-svc     DashboardQueryTimeouts
+  a32  t+ 20.0  dashboard-svc     DashboardQueryTimeouts
+  a33  t+ 20.3  dashboard-svc     DashboardQueryTimeouts
+  a34  t+ 20.8  warehouse-loader  LoadJobFailed
+  a35  t+ 21.5  warehouse-loader  LoadJobFailed
+  a36  t+ 21.5  dashboard-svc     DashboardQueryTimeouts
+  a37  t+ 21.6  api-serving       ServingP99LatencyHigh
+  a38  t+ 21.8  dag-scheduler     SchedulerHeartbeatMissed
+  a39  t+ 22.4  dashboard-svc     DashboardQueryTimeouts
+  a40  t+ 22.5  postgres-primary  PostgresConnectionSaturation
+  a41  t+ 22.8  dashboard-svc     DashboardQueryTimeouts
+  a42  t+ 23.2  api-serving       ServingP99LatencyHigh
+  a43  t+ 23.7  api-serving       ServingP99LatencyHigh
+  a44  t+ 24.4  dashboard-svc     DashboardQueryTimeouts
+  a45  t+ 25.1  spark-batch       SparkStageRetriesHigh
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): postgres-primary (45.2), api-serving (0.5), feature-store (0.2)
+
+STORM S09: alerts in window (minutes relative to window start)
+  a00  t+  1.7  ingest-gateway    IngestGateway5xxBudgetBurn
+  a01  t+  9.6  postgres-primary  PostgresConnectionSaturation
+  a02  t+  9.7  dag-scheduler     SchedulerHeartbeatMissed
+  a03  t+  9.9  dag-scheduler     SchedulerHeartbeatMissed
+  a04  t+ 10.2  feature-store     FeatureFreshnessSLOBreach
+  a05  t+ 10.9  api-serving       ServingP99LatencyHigh
+  a06  t+ 11.0  dag-scheduler     SchedulerHeartbeatMissed
+  a07  t+ 11.5  dag-scheduler     SchedulerHeartbeatMissed
+  a08  t+ 11.5  api-serving       ServingP99LatencyHigh
+  a09  t+ 11.6  api-serving       ServingP99LatencyHigh
+  a10  t+ 11.9  dashboard-svc     DashboardQueryTimeouts
+  a11  t+ 12.0  dag-scheduler     SchedulerHeartbeatMissed
+  a12  t+ 12.8  api-serving       ServingP99LatencyHigh
+  a13  t+ 14.6  warehouse-loader  LoadJobFailed
+  a14  t+ 22.5  dag-scheduler     SchedulerHeartbeatMissed
+  a15  t+ 25.2  metrics-exporter  ExporterScrapeFlapping
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): postgres-primary (13.7), ingest-gateway (1.0), metrics-exporter (1.0)
+
+STORM S10: alerts in window (minutes relative to window start)
+  a00  t+  2.6  metrics-exporter  ExporterScrapeFlapping
+  a01  t+  7.6  spark-batch       SparkStageRetriesHigh
+  a02  t+  8.2  warehouse-loader  LoadJobFailed
+  a03  t+ 11.4  dashboard-svc     DashboardQueryTimeouts
+  a04  t+ 14.1  spark-batch       SparkStageRetriesHigh
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): spark-batch (3.4), metrics-exporter (1.5), dashboard-svc (0.0)
+
+STORM S11: alerts in window (minutes relative to window start)
+  a00  t+  7.3  warehouse-loader  LoadJobFailed
+  a01  t+  7.4  dashboard-svc     DashboardQueryTimeouts
+  a02  t+  7.8  dashboard-svc     DashboardQueryTimeouts
+  a03  t+ 13.7  dashboard-svc     DashboardQueryTimeouts
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): warehouse-loader (4.0), dashboard-svc (0.0), object-store (0.0)
+
+STORM S12: alerts in window (minutes relative to window start)
+  a00  t+  7.1  api-serving       ServingP99LatencyHigh
+  a01  t+  8.6  dashboard-svc     DashboardQueryTimeouts
+  a02  t+ 10.2  dashboard-svc     DashboardQueryTimeouts
+  a03  t+ 10.4  dashboard-svc     DashboardQueryTimeouts
+  a04  t+ 12.3  dashboard-svc     DashboardQueryTimeouts
+  a05  t+ 17.5  metrics-exporter  ExporterScrapeFlapping
+  a06  t+ 17.7  metrics-exporter  ExporterScrapeFlapping
+  a07  t+ 29.5  metrics-exporter  ExporterScrapeFlapping
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): api-serving (5.0), metrics-exporter (3.0), dashboard-svc (0.0)
+
+STORM S13: alerts in window (minutes relative to window start)
+  a00  t+  9.3  feature-store     FeatureFreshnessSLOBreach
+  a01  t+ 10.0  api-serving       ServingP99LatencyHigh
+  a02  t+ 10.5  api-serving       ServingP99LatencyHigh
+  a03  t+ 11.9  api-serving       ServingP99LatencyHigh
+  a04  t+ 12.4  api-serving       ServingP99LatencyHigh
+  a05  t+ 13.4  dashboard-svc     DashboardQueryTimeouts
+  a06  t+ 15.4  api-serving       ServingP99LatencyHigh
+  a07  t+ 16.8  dashboard-svc     DashboardQueryTimeouts
+  a08  t+ 17.3  dashboard-svc     DashboardQueryTimeouts
+  a09  t+ 17.6  dashboard-svc     DashboardQueryTimeouts
+  a10  t+ 18.1  api-serving       ServingP99LatencyHigh
+  a11  t+ 19.3  object-store      ObjectStoreHighErrorRate
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): feature-store (11.1), object-store (0.6), api-serving (0.3)
+
+STORM S14: alerts in window (minutes relative to window start)
+  a00  t+  7.8  kafka-broker      KafkaUnderReplicatedPartitions
+  a01  t+  8.2  object-store      ObjectStoreHighErrorRate
+  a02  t+  8.4  feature-store     FeatureFreshnessSLOBreach
+  a03  t+  8.8  warehouse-loader  LoadJobFailed
+  a04  t+ 10.1  spark-batch       SparkStageRetriesHigh
+  a05  t+ 10.3  warehouse-loader  LoadJobFailed
+  a06  t+ 10.3  api-serving       ServingP99LatencyHigh
+  a07  t+ 11.6  warehouse-loader  LoadJobFailed
+  a08  t+ 14.7  warehouse-loader  LoadJobFailed
+  a09  t+ 15.2  warehouse-loader  LoadJobFailed
+  a10  t+ 20.1  dashboard-svc     DashboardQueryTimeouts
+  a11  t+ 28.1  dag-scheduler     SchedulerHeartbeatMissed
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): object-store (10.1), kafka-broker (1.0), dag-scheduler (0.7)
+
+STORM S15: alerts in window (minutes relative to window start)
+  a00  t+ 10.6  feature-store     FeatureFreshnessSLOBreach
+  a01  t+ 12.3  api-serving       ServingP99LatencyHigh
+  a02  t+ 12.4  api-serving       ServingP99LatencyHigh
+  a03  t+ 12.9  api-serving       ServingP99LatencyHigh
+  a04  t+ 14.1  api-serving       ServingP99LatencyHigh
+  a05  t+ 14.5  dashboard-svc     DashboardQueryTimeouts
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): feature-store (5.9), api-serving (0.1), dashboard-svc (0.0)
+
+STORM S16: alerts in window (minutes relative to window start)
+  a00  t+  1.9  metrics-exporter  ExporterScrapeFlapping
+  a01  t+  2.1  metrics-exporter  ExporterScrapeFlapping
+  a02  t+  6.0  metrics-exporter  ExporterScrapeFlapping
+  a03  t+ 11.2  spark-batch       SparkStageRetriesHigh
+  a04  t+ 12.0  spark-batch       SparkStageRetriesHigh
+  a05  t+ 13.4  api-serving       ServingP99LatencyHigh
+  a06  t+ 13.9  spark-batch       SparkStageRetriesHigh
+  a07  t+ 15.0  warehouse-loader  LoadJobFailed
+  a08  t+ 15.9  api-serving       ServingP99LatencyHigh
+  a09  t+ 18.2  warehouse-loader  LoadJobFailed
+  a10  t+ 19.2  api-serving       ServingP99LatencyHigh
+  a11  t+ 19.8  dashboard-svc     DashboardQueryTimeouts
+  a12  t+ 20.5  object-store      ObjectStoreHighErrorRate
+  a13  t+ 20.6  warehouse-loader  LoadJobFailed
+  a14  t+ 21.0  dashboard-svc     DashboardQueryTimeouts
+  a15  t+ 21.4  feature-store     FeatureFreshnessSLOBreach
+  a16  t+ 21.6  feature-store     FeatureFreshnessSLOBreach
+  a17  t+ 22.9  feature-store     FeatureFreshnessSLOBreach
+  a18  t+ 28.1  object-store      ObjectStoreHighErrorRate
+  a19  t+ 29.8  metrics-exporter  ExporterScrapeFlapping
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): spark-batch (9.7), metrics-exporter (6.4), object-store (3.1)
+
+STORM S17: alerts in window (minutes relative to window start)
+  a00  t+  0.5  warehouse-loader  LoadJobFailed
+  a01  t+  1.6  dashboard-svc     DashboardQueryTimeouts
+  a02  t+  1.6  ingest-gateway    IngestGateway5xxBudgetBurn
+  a03  t+  2.0  stream-enricher   ConsumerLagGrowing
+  a04  t+  2.3  feature-store     FeatureFreshnessSLOBreach
+  a05  t+  2.5  feature-store     FeatureFreshnessSLOBreach
+  a06  t+  3.1  warehouse-loader  LoadJobFailed
+  a07  t+  3.1  api-serving       ServingP99LatencyHigh
+  a08  t+  4.1  api-serving       ServingP99LatencyHigh
+  a09  t+  7.0  metrics-exporter  ExporterScrapeFlapping
+  a10  t+ 10.6  ingest-gateway    IngestGateway5xxBudgetBurn
+  a11  t+ 13.5  warehouse-loader  LoadJobFailed
+  a12  t+ 14.9  dashboard-svc     DashboardQueryTimeouts
+  a13  t+ 15.0  dashboard-svc     DashboardQueryTimeouts
+  a14  t+ 23.3  dashboard-svc     DashboardQueryTimeouts
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): kafka-broker (12.9), ingest-gateway (0.9), metrics-exporter (0.8)
+
+STORM S18: alerts in window (minutes relative to window start)
+  a00  t+ 11.5  postgres-primary  PostgresConnectionSaturation
+  a01  t+ 11.6  api-serving       ServingP99LatencyHigh
+  a02  t+ 12.1  api-serving       ServingP99LatencyHigh
+  a03  t+ 13.2  api-serving       ServingP99LatencyHigh
+  a04  t+ 13.3  object-store      ObjectStoreHighErrorRate
+  a05  t+ 13.5  feature-store     FeatureFreshnessSLOBreach
+  a06  t+ 13.9  feature-store     FeatureFreshnessSLOBreach
+  a07  t+ 15.5  spark-batch       SparkStageRetriesHigh
+  a08  t+ 15.9  feature-store     FeatureFreshnessSLOBreach
+  a09  t+ 16.0  dag-scheduler     SchedulerHeartbeatMissed
+  a10  t+ 16.8  dag-scheduler     SchedulerHeartbeatMissed
+  a11  t+ 16.8  feature-store     FeatureFreshnessSLOBreach
+  a12  t+ 18.0  spark-batch       SparkStageRetriesHigh
+  a13  t+ 19.0  api-serving       ServingP99LatencyHigh
+  a14  t+ 19.2  api-serving       ServingP99LatencyHigh
+  a15  t+ 19.4  dashboard-svc     DashboardQueryTimeouts
+  a16  t+ 19.8  feature-store     FeatureFreshnessSLOBreach
+  a17  t+ 21.7  api-serving       ServingP99LatencyHigh
+  a18  t+ 24.0  api-serving       ServingP99LatencyHigh
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): postgres-primary (13.7), object-store (5.0), api-serving (0.1)
+
+STORM S19: alerts in window (minutes relative to window start)
+  a00  t+ 15.9  stream-enricher   ConsumerLagGrowing
+  a01  t+ 16.7  stream-enricher   ConsumerLagGrowing
+  a02  t+ 17.0  feature-store     FeatureFreshnessSLOBreach
+  a03  t+ 17.5  feature-store     FeatureFreshnessSLOBreach
+  a04  t+ 17.7  api-serving       ServingP99LatencyHigh
+  a05  t+ 18.1  warehouse-loader  LoadJobFailed
+  a06  t+ 18.6  api-serving       ServingP99LatencyHigh
+  a07  t+ 19.0  dashboard-svc     DashboardQueryTimeouts
+  a08  t+ 19.1  dashboard-svc     DashboardQueryTimeouts
+  a09  t+ 19.7  warehouse-loader  LoadJobFailed
+  a10  t+ 19.8  api-serving       ServingP99LatencyHigh
+  a11  t+ 19.8  dashboard-svc     DashboardQueryTimeouts
+  a12  t+ 20.0  warehouse-loader  LoadJobFailed
+  a13  t+ 20.8  warehouse-loader  LoadJobFailed
+  a14  t+ 21.1  dashboard-svc     DashboardQueryTimeouts
+  a15  t+ 23.4  dashboard-svc     DashboardQueryTimeouts
+  a16  t+ 23.6  dashboard-svc     DashboardQueryTimeouts
+  a17  t+ 24.4  ingest-gateway    IngestGateway5xxBudgetBurn
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): stream-enricher (17.2), ingest-gateway (0.6), api-serving (0.1)
+
+STORM S20: alerts in window (minutes relative to window start)
+  a00  t+  3.7  stream-enricher   ConsumerLagGrowing
+  a01  t+  3.9  feature-store     FeatureFreshnessSLOBreach
+  a02  t+  6.6  object-store      ObjectStoreHighErrorRate
+  a03  t+  6.6  spark-batch       SparkStageRetriesHigh
+  a04  t+  6.8  feature-store     FeatureFreshnessSLOBreach
+  a05  t+  6.9  feature-store     FeatureFreshnessSLOBreach
+  a06  t+  7.5  spark-batch       SparkStageRetriesHigh
+  a07  t+  7.7  warehouse-loader  LoadJobFailed
+  a08  t+  8.3  warehouse-loader  LoadJobFailed
+  a09  t+  8.6  feature-store     FeatureFreshnessSLOBreach
+  a10  t+  8.9  warehouse-loader  LoadJobFailed
+  a11  t+  9.1  api-serving       ServingP99LatencyHigh
+  a12  t+  9.4  feature-store     FeatureFreshnessSLOBreach
+  a13  t+  9.9  ingest-gateway    IngestGateway5xxBudgetBurn
+  a14  t+ 10.2  dashboard-svc     DashboardQueryTimeouts
+  a15  t+ 10.3  feature-store     FeatureFreshnessSLOBreach
+  a16  t+ 10.6  api-serving       ServingP99LatencyHigh
+  a17  t+ 10.9  api-serving       ServingP99LatencyHigh
+  a18  t+ 11.1  dashboard-svc     DashboardQueryTimeouts
+  a19  t+ 11.2  dashboard-svc     DashboardQueryTimeouts
+  a20  t+ 11.3  dashboard-svc     DashboardQueryTimeouts
+  a21  t+ 11.8  dashboard-svc     DashboardQueryTimeouts
+  a22  t+ 12.6  dashboard-svc     DashboardQueryTimeouts
+  a23  t+ 15.1  warehouse-loader  LoadJobFailed
+  a24  t+ 22.2  dashboard-svc     DashboardQueryTimeouts
+  a25  t+ 23.7  metrics-exporter  ExporterScrapeFlapping
+  a26  t+ 27.3  metrics-exporter  ExporterScrapeFlapping
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): object-store (18.2), stream-enricher (6.3), metrics-exporter (2.0)
+
+STORM S21: alerts in window (minutes relative to window start)
+  a00  t+  3.1  metrics-exporter  ExporterScrapeFlapping
+  a01  t+  5.9  dag-scheduler     SchedulerHeartbeatMissed
+  a02  t+  7.1  warehouse-loader  LoadJobFailed
+  a03  t+  7.7  spark-batch       SparkStageRetriesHigh
+  a04  t+  9.6  warehouse-loader  LoadJobFailed
+  a05  t+ 10.7  spark-batch       SparkStageRetriesHigh
+  a06  t+ 11.8  warehouse-loader  LoadJobFailed
+  a07  t+ 12.0  dashboard-svc     DashboardQueryTimeouts
+  a08  t+ 13.4  warehouse-loader  LoadJobFailed
+  a09  t+ 17.4  metrics-exporter  ExporterScrapeFlapping
+  a10  t+ 29.4  metrics-exporter  ExporterScrapeFlapping
+  a11  t+ 29.5  metrics-exporter  ExporterScrapeFlapping
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): dag-scheduler (7.9), metrics-exporter (3.8), spark-batch (0.3)
+
+STORM S22: alerts in window (minutes relative to window start)
+  a00  t+ 11.4  stream-enricher   ConsumerLagGrowing
+  a01  t+ 11.6  stream-enricher   ConsumerLagGrowing
+  a02  t+ 13.7  stream-enricher   ConsumerLagGrowing
+  a03  t+ 14.4  warehouse-loader  LoadJobFailed
+  a04  t+ 14.7  feature-store     FeatureFreshnessSLOBreach
+  a05  t+ 16.6  object-store      ObjectStoreHighErrorRate
+  a06  t+ 18.7  spark-batch       SparkStageRetriesHigh
+  a07  t+ 19.9  api-serving       ServingP99LatencyHigh
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): stream-enricher (6.3), object-store (1.6), api-serving (0.0)
+
+STORM S23: alerts in window (minutes relative to window start)
+  a00  t+  1.3  object-store      ObjectStoreHighErrorRate
+  a01  t+  4.5  kafka-broker      KafkaUnderReplicatedPartitions
+  a02  t+  9.2  kafka-broker      KafkaUnderReplicatedPartitions
+  a03  t+  9.9  ingest-gateway    IngestGateway5xxBudgetBurn
+  Hawkes model hint, expected number of window alerts descending from each service (top 3): kafka-broker (3.0), object-store (1.0), ingest-gateway (0.0)
+
+Reply with JSON only: {"answers": [{"storm": "<key>", "root_service": "<service>"}, ...]}
